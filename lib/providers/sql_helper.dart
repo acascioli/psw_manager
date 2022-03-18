@@ -1,10 +1,15 @@
 import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart' as sql;
-import 'package:path/path.dart';
+import 'package:sqflite_common/sqlite_api.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class SQLHelper {
-  static Future<void> createTables(sql.Database database) async {
-    await database.execute("""CREATE TABLE items(
+  static Future createTables() async {
+    // Init ffi loader if needed.
+    sqfliteFfiInit();
+
+    var databaseFactory = databaseFactoryFfi;
+    var db = await databaseFactory.openDatabase('psws.db');
+    await db.execute("""CREATE TABLE IF NOT EXISTS Psws(
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         title TEXT,
         username TEXT,
@@ -14,26 +19,20 @@ class SQLHelper {
         createdOn TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
       """);
-  }
-// id: the id of a item
-// title, description: name and description of your activity
-// created_at: the time that the item was created. It will be automatically handled by SQLite
 
-  static Future<sql.Database> db() async {
-    return sql.openDatabase(
-      join(await sql.getDatabasesPath(), 'psws.db'),
-      version: 1,
-      onCreate: (sql.Database database, int version) async {
-        await createTables(database);
-      },
-    );
+    var result = await db.query('Psws');
+    print(result);
+    // prints [{id: 1, title: Product 1}, {id: 2, title: Product 1}]
+    await db.close();
   }
 
-  // Create new item (psw)
-  static Future<int> createItem(String title, String? username,
-      String? password, String? userAvatar) async {
-    final db = await SQLHelper.db();
+  static Future createItem(String title, String? username, String? password,
+      String? userAvatar) async {
+    // Init ffi loader if needed.
+    sqfliteFfiInit();
 
+    var databaseFactory = databaseFactoryFfi;
+    var db = await databaseFactory.openDatabase('psws.db');
     final data = {
       'title': title,
       'username': username,
@@ -41,49 +40,70 @@ class SQLHelper {
       'userAvatar': userAvatar,
       'pinned': false
     };
-    final id = await db.insert('items', data,
-        conflictAlgorithm: sql.ConflictAlgorithm.replace);
-    return id;
+
+    final id = await db.insert('Psws', data,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+    var result = await db.query('Psws');
+    print(result);
+    // prints [{id: 1, title: Product 1}, {id: 2, title: Product 1}]
+    await db.close();
+  }
+
+  static Future updateItem(int id, String title, String? username,
+      String? password, String? userAvatar) async {
+    // Init ffi loader if needed.
+    sqfliteFfiInit();
+
+    var databaseFactory = databaseFactoryFfi;
+    var db = await databaseFactory.openDatabase('psws.db');
+    final data = {
+      'title': title,
+      'username': username,
+      'password': password,
+      'userAvatar': userAvatar,
+      'createdAt': DateTime.now().toString()
+    };
+
+    await db.update('Psws', data, where: "id = ?", whereArgs: [id]);
+    var result = await db.query('Psws');
+    print(result);
+    // prints [{id: 1, title: Product 1}, {id: 2, title: Product 1}]
+    await db.close();
+  }
+
+  static Future deleteItem(int id) async {
+    // Init ffi loader if needed.
+    sqfliteFfiInit();
+
+    var databaseFactory = databaseFactoryFfi;
+    var db = await databaseFactory.openDatabase('psws.db');
+    try {
+      await db.delete("Psws", where: "id = ?", whereArgs: [id]);
+    } catch (err) {
+      debugPrint("Something went wrong when deleting an item: $err");
+    }
+    var result = await db.query('Psws');
+    print(result);
+    // prints [{id: 1, title: Product 1}, {id: 2, title: Product 1}]
+    await db.close();
   }
 
   // Read all items (psws)
   static Future<List<Map<String, dynamic>>> getItems() async {
-    final db = await SQLHelper.db();
-    return db.query('items', orderBy: "id");
+    sqfliteFfiInit();
+
+    var databaseFactory = databaseFactoryFfi;
+    var db = await databaseFactory.openDatabase('psws.db');
+    return db.query('Psws', orderBy: "id");
   }
 
   // Read a single item by id
   // The app doesn't use this method but I put here in case you want to see it
   static Future<List<Map<String, dynamic>>> getItem(int id) async {
-    final db = await SQLHelper.db();
-    return db.query('items', where: "id = ?", whereArgs: [id], limit: 1);
-  }
+    sqfliteFfiInit();
 
-  // Update an item by id
-  static Future<int> updateItem(int id, String title, String? username,
-      String? password, String? userAvatar) async {
-    final db = await SQLHelper.db();
-
-    final data = {
-      'title': title,
-      'username': username,
-      'content': password,
-      'userAvatar': userAvatar,
-      'createdAt': DateTime.now().toString()
-    };
-
-    final result =
-        await db.update('items', data, where: "id = ?", whereArgs: [id]);
-    return result;
-  }
-
-  // Delete
-  static Future<void> deleteItem(int id) async {
-    final db = await SQLHelper.db();
-    try {
-      await db.delete("items", where: "id = ?", whereArgs: [id]);
-    } catch (err) {
-      debugPrint("Something went wrong when deleting an item: $err");
-    }
+    var databaseFactory = databaseFactoryFfi;
+    var db = await databaseFactory.openDatabase('psws.db');
+    return db.query('Psws', where: "id = ?", whereArgs: [id], limit: 1);
   }
 }

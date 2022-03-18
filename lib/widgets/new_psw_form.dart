@@ -17,6 +17,44 @@ class _PswData {
 }
 
 class _NewPswFormState extends State<NewPswForm> {
+  // All psws
+  List<Map<String, dynamic>> _psws = [];
+
+  bool _isLoading = true;
+  // This function is used to fetch all data from the database
+  void _createPswsTable() async {
+    await SQLHelper.createTables();
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  // This function is used to fetch all data from the database
+  void _refreshPsws() async {
+    final data = await SQLHelper.getItems();
+    setState(() {
+      _psws = data;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _createPswsTable();
+    _refreshPsws(); // Loading the diary when the app starts
+  }
+
+  Future<void> _addItem(_PswData _data) async {
+    await SQLHelper.createItem(
+      _data.title!,
+      _data.username,
+      _data.password,
+      _data.userAvatar,
+    );
+    _refreshPsws();
+  }
+
   final _formKey = GlobalKey<FormState>();
   final _PswData _data = _PswData();
   @override
@@ -110,7 +148,7 @@ class _NewPswFormState extends State<NewPswForm> {
       ),
       actions: <Widget>[
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             // Validate returns true if the form is valid, or false otherwise.
             if (_formKey.currentState!.validate()) {
               _formKey.currentState?.save();
