@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:psw_manager/providers/sql_helper.dart';
 import 'package:file_picker/file_picker.dart';
 
+import 'package:get/get.dart';
+import 'package:psw_manager/providers/app_controller.dart';
+
 class NewPswForm extends StatefulWidget {
   const NewPswForm({Key? key}) : super(key: key);
 
@@ -21,6 +24,8 @@ class _NewPswFormState extends State<NewPswForm> {
   List<Map<String, dynamic>> _psws = [];
 
   bool _isLoading = true;
+  final controller = Get.put(AppController());
+
   // This function is used to fetch all data from the database
   void _createPswsTable() async {
     await SQLHelper.createTables();
@@ -33,6 +38,7 @@ class _NewPswFormState extends State<NewPswForm> {
   void _refreshPsws() async {
     final data = await SQLHelper.getItems();
     setState(() {
+      controller.refreshPswsController(data);
       _psws = data;
       _isLoading = false;
     });
@@ -56,6 +62,9 @@ class _NewPswFormState extends State<NewPswForm> {
   }
 
   final _formKey = GlobalKey<FormState>();
+  final titleController = TextEditingController();
+  final userController = TextEditingController();
+  final pswController = TextEditingController();
   final _PswData _data = _PswData();
   @override
   Widget build(BuildContext context) {
@@ -68,6 +77,8 @@ class _NewPswFormState extends State<NewPswForm> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             TextFormField(
+              controller: titleController,
+              autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Title',
                 // hintText: 'you@example.com',
@@ -84,6 +95,8 @@ class _NewPswFormState extends State<NewPswForm> {
               },
             ),
             TextFormField(
+              controller: userController,
+              autofocus: true,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Username',
@@ -101,6 +114,8 @@ class _NewPswFormState extends State<NewPswForm> {
               },
             ),
             TextFormField(
+              controller: pswController,
+              autofocus: true,
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Password',
@@ -128,7 +143,7 @@ class _NewPswFormState extends State<NewPswForm> {
                       if (result == null) {
                         print("No file selected");
                       } else {
-                        _data.userAvatar = result.files.single.name;
+                        _data.userAvatar = result.files.single.path;
                         print(result.files.single.path);
                       }
                     });
@@ -153,11 +168,18 @@ class _NewPswFormState extends State<NewPswForm> {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState?.save();
               print(_data.username);
+              await _addItem(_data);
               // If the form is valid, display a snackbar. In the real world,
               // you'd often call a server or save the information in a database.
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Processing Data')),
               );
+              setState(() {
+                titleController.clear();
+                userController.clear();
+                pswController.clear();
+                _data.userAvatar = '';
+              });
             }
           },
           child: const Text('Submit'),

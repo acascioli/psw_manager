@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:psw_manager/models/psw.dart';
+import 'package:psw_manager/providers/sql_helper.dart';
 import '../constants.dart';
+
+import 'package:get/get.dart';
+import 'package:psw_manager/providers/app_controller.dart';
 
 class PswCard extends StatefulWidget {
   const PswCard({
@@ -15,7 +20,33 @@ class PswCard extends StatefulWidget {
 }
 
 class _PswCardState extends State<PswCard> {
+  // All psws
+  List<Map<String, dynamic>> _psws = [];
   bool entered = false;
+  final controller = Get.put(AppController());
+  var selectedItem = '';
+
+  void _deleteItem(title) async {
+    await SQLHelper.deleteItem(title);
+    setState(() {
+      _refreshPsws();
+    });
+  }
+
+  void _togglePinned(Psw psw) async {
+    await SQLHelper.togglePinned(psw);
+    setState(() {
+      _refreshPsws();
+    });
+  }
+
+  void _refreshPsws() async {
+    final data = await SQLHelper.getItems();
+    setState(() {
+      controller.refreshPswsController(data);
+      _psws = data;
+    });
+  }
 
   @override
   Widget build(BuildContext context) => MouseRegion(
@@ -61,14 +92,23 @@ class _PswCardState extends State<PswCard> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(100),
                     child: SizedBox(
-                      width: 38,
-                      height: 38,
-                      child: Image.asset(
-                        'assets/images/${widget.psw.userAvatar}',
-                        fit: BoxFit.cover,
-                        color: darkColor.withOpacity(.3),
-                        colorBlendMode: BlendMode.srcOver,
-                      ),
+                      width: 60,
+                      height: 60,
+                      child: (widget.psw.userAvatar == '')
+                          ? Image.asset(
+                              'assets/images/psw.png',
+                              fit: BoxFit.cover,
+                              color: darkColor.withOpacity(.3),
+                              colorBlendMode: BlendMode.srcOver,
+                            )
+                          : Image.file(
+                              File(
+                                widget.psw.userAvatar,
+                              ),
+                              fit: BoxFit.cover,
+                              color: darkColor.withOpacity(.3),
+                              colorBlendMode: BlendMode.srcOver,
+                            ),
                     ),
                   ),
                   const SizedBox(
@@ -78,7 +118,7 @@ class _PswCardState extends State<PswCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.psw.username,
+                        widget.psw.title,
                         style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           color: darkColor,
@@ -93,18 +133,74 @@ class _PswCardState extends State<PswCard> {
                           color: textColor,
                           fontSize: 13,
                         ),
-                      )
+                      ),
                     ],
                   ),
                   if (entered) ...[
                     const Spacer(),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.more_vert,
-                        color: darkColor,
+                    Column(
+                      children: [
+                        PopupMenuButton(
+                            onSelected: (selectedValue) {
+                              setState(() {
+                                selectedItem = selectedValue.toString();
+                              });
+                              print(selectedItem);
+                            },
+                            itemBuilder: (BuildContext ctx) => [
+                                  const PopupMenuItem(
+                                      child: Text('Copy password'), value: '1'),
+                                  const PopupMenuItem(
+                                      child: Text('Show password'), value: '2'),
+                                  const PopupMenuItem(
+                                      child: Text('Edit'), value: '3'),
+                                  PopupMenuItem(
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                      value: '4',
+                                      onTap: () {
+                                        setState(() {
+                                          _deleteItem(widget.psw.title);
+                                        });
+                                      }),
+                                ]),
+                        // IconButton(
+                        //   onPressed: () {
+                        //     print('Ping');
+                        //   },
+                        //   icon: const Icon(
+                        //     Icons.more_vert,
+                        //     color: darkColor,
+                        //   ),
+                        // ),
+                        IconButton(
+                          onPressed: () {
+                            _togglePinned(widget.psw);
+                            print('Pong');
+                          },
+                          icon: Icon(
+                            widget.psw.pinned
+                                ? Icons.push_pin
+                                : Icons.push_pin_outlined,
+                            color: darkColor,
+                          ),
+                        ),
+                      ],
+                    )
+                  ] else ...[
+                    const Spacer(),
+                    if (widget.psw.pinned)
+                      IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.push_pin,
+                          color: darkColor,
+                        ),
                       ),
-                    ),
                   ],
                 ],
               ),
@@ -112,7 +208,7 @@ class _PswCardState extends State<PswCard> {
                 height: 12,
               ),
               Text(
-                widget.psw.title,
+                widget.psw.username,
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   color: darkColor,

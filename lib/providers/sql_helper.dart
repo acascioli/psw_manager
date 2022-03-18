@@ -1,14 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:psw_manager/models/psw.dart';
 
 class SQLHelper {
   static Future createTables() async {
     // Init ffi loader if needed.
     sqfliteFfiInit();
 
+    var appDocDir = await getApplicationDocumentsDirectory();
+    var dbPath = appDocDir.absolute.path + '\\Dbs' + '\\psws.db';
+
     var databaseFactory = databaseFactoryFfi;
-    var db = await databaseFactory.openDatabase('psws.db');
+    var db = await databaseFactory.openDatabase(dbPath);
     await db.execute("""CREATE TABLE IF NOT EXISTS Psws(
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         title TEXT,
@@ -31,14 +36,17 @@ class SQLHelper {
     // Init ffi loader if needed.
     sqfliteFfiInit();
 
+    var appDocDir = await getApplicationDocumentsDirectory();
+    var dbPath = appDocDir.absolute.path + '\\Dbs' + '\\psws.db';
+
     var databaseFactory = databaseFactoryFfi;
-    var db = await databaseFactory.openDatabase('psws.db');
+    var db = await databaseFactory.openDatabase(dbPath);
     final data = {
       'title': title,
       'username': username,
       'password': password,
       'userAvatar': userAvatar,
-      'pinned': false
+      'pinned': 'FALSE'
     };
 
     final id = await db.insert('Psws', data,
@@ -54,14 +62,17 @@ class SQLHelper {
     // Init ffi loader if needed.
     sqfliteFfiInit();
 
+    var appDocDir = await getApplicationDocumentsDirectory();
+    var dbPath = appDocDir.absolute.path + '\\Dbs' + '\\psws.db';
+
     var databaseFactory = databaseFactoryFfi;
-    var db = await databaseFactory.openDatabase('psws.db');
+    var db = await databaseFactory.openDatabase(dbPath);
     final data = {
       'title': title,
       'username': username,
       'password': password,
       'userAvatar': userAvatar,
-      'createdAt': DateTime.now().toString()
+      'createdOn': DateTime.now().toString()
     };
 
     await db.update('Psws', data, where: "id = ?", whereArgs: [id]);
@@ -71,14 +82,44 @@ class SQLHelper {
     await db.close();
   }
 
-  static Future deleteItem(int id) async {
+  static Future togglePinned(Psw psw) async {
     // Init ffi loader if needed.
     sqfliteFfiInit();
 
+    var appDocDir = await getApplicationDocumentsDirectory();
+    var dbPath = appDocDir.absolute.path + '\\Dbs' + '\\psws.db';
+
     var databaseFactory = databaseFactoryFfi;
-    var db = await databaseFactory.openDatabase('psws.db');
+    var db = await databaseFactory.openDatabase(dbPath);
+
+    final data = {
+      'title': psw.title,
+      'username': psw.username,
+      'password': psw.password,
+      'userAvatar': psw.userAvatar,
+      'pinned': psw.pinned ? 'FALSE' : 'TRUE',
+      'createdOn': psw.createdOn
+    };
+
+    await db.update('Psws', data, where: "title = ?", whereArgs: [psw.title]);
+    var result = await db.query('Psws');
+    print(result);
+    // prints [{id: 1, title: Product 1}, {id: 2, title: Product 1}]
+    await db.close();
+  }
+
+  static Future deleteItem(String title) async {
+    // static Future deleteItem(int id) async {
+    // Init ffi loader if needed.
+    sqfliteFfiInit();
+
+    var appDocDir = await getApplicationDocumentsDirectory();
+    var dbPath = appDocDir.absolute.path + '\\Dbs' + '\\psws.db';
+
+    var databaseFactory = databaseFactoryFfi;
+    var db = await databaseFactory.openDatabase(dbPath);
     try {
-      await db.delete("Psws", where: "id = ?", whereArgs: [id]);
+      await db.delete("Psws", where: "title = ?", whereArgs: [title]);
     } catch (err) {
       debugPrint("Something went wrong when deleting an item: $err");
     }
@@ -92,8 +133,11 @@ class SQLHelper {
   static Future<List<Map<String, dynamic>>> getItems() async {
     sqfliteFfiInit();
 
+    var appDocDir = await getApplicationDocumentsDirectory();
+    var dbPath = appDocDir.absolute.path + '\\Dbs' + '\\psws.db';
+
     var databaseFactory = databaseFactoryFfi;
-    var db = await databaseFactory.openDatabase('psws.db');
+    var db = await databaseFactory.openDatabase(dbPath);
     return db.query('Psws', orderBy: "id");
   }
 
@@ -102,8 +146,11 @@ class SQLHelper {
   static Future<List<Map<String, dynamic>>> getItem(int id) async {
     sqfliteFfiInit();
 
+    var appDocDir = await getApplicationDocumentsDirectory();
+    var dbPath = appDocDir.absolute.path + '\\Dbs' + '\\psws.db';
+
     var databaseFactory = databaseFactoryFfi;
-    var db = await databaseFactory.openDatabase('psws.db');
+    var db = await databaseFactory.openDatabase(dbPath);
     return db.query('Psws', where: "id = ?", whereArgs: [id], limit: 1);
   }
 }
