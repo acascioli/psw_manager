@@ -5,7 +5,8 @@ class Psw {
   final String title;
   final String username;
   final String password;
-  final String userAvatar;
+  final String pswIcon;
+  final String pswColor;
   final bool pinned;
   final String createdOn;
 
@@ -14,7 +15,8 @@ class Psw {
     this.title,
     this.username,
     this.password,
-    this.userAvatar,
+    this.pswIcon,
+    this.pswColor,
     this.pinned,
     this.createdOn,
   );

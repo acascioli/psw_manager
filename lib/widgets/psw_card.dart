@@ -22,6 +22,36 @@ class PswCard extends StatefulWidget {
 }
 
 class _PswCardState extends State<PswCard> {
+  List<Icon> icons = [
+    const Icon(Icons.account_circle, size: 64, color: Colors.white),
+    const Icon(Icons.add, size: 64, color: Colors.white),
+    const Icon(Icons.access_alarms, size: 64, color: Colors.white),
+    const Icon(Icons.ac_unit, size: 64, color: Colors.white),
+    const Icon(Icons.accessible, size: 64, color: Colors.white),
+    const Icon(Icons.account_balance, size: 64, color: Colors.white),
+    const Icon(Icons.add_circle_outline, size: 64, color: Colors.white),
+    const Icon(Icons.airline_seat_individual_suite,
+        size: 64, color: Colors.white),
+    const Icon(Icons.arrow_drop_down_circle, size: 64, color: Colors.white),
+    const Icon(Icons.assessment, size: 64, color: Colors.white),
+  ];
+
+  List<String> iconNames = [
+    "Icon 1",
+    "Icon 2",
+    "Icon 3",
+    "Icon 4",
+    "Icon 5",
+    "Icon 6",
+    "Icon 7",
+    "Icon 8",
+    "Icon 9",
+    "Icon 10",
+  ];
+  Color hexToColor(String code) {
+    return Color(int.parse(code.substring(1, 9), radix: 16) + 0xFF000000);
+  }
+
   // All psws
   List<Map<String, dynamic>> _psws = [];
   bool entered = false;
@@ -51,8 +81,8 @@ class _PswCardState extends State<PswCard> {
   }
 
   // This function is triggered when the copy icon is pressed
-  Future<void> _copyToClipboard(psw_text) async {
-    await Clipboard.setData(ClipboardData(text: psw_text));
+  Future<void> _copyToClipboard(pswText) async {
+    await Clipboard.setData(ClipboardData(text: pswText));
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Copied to clipboard'),
     ));
@@ -144,26 +174,17 @@ class _PswCardState extends State<PswCard> {
                 Row(
                   children: [
                     if (Responsive.isDesktop(context))
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(100),
-                        child: SizedBox(
-                          width: 50,
-                          height: 50,
-                          child: (widget.psw.userAvatar == '')
-                              ? Image.asset(
-                                  'assets/images/psw.png',
-                                  fit: BoxFit.cover,
-                                  color: darkColor.withOpacity(.3),
-                                  colorBlendMode: BlendMode.srcOver,
-                                )
-                              : Image.file(
-                                  File(
-                                    widget.psw.userAvatar,
-                                  ),
-                                  fit: BoxFit.cover,
-                                  color: darkColor.withOpacity(.3),
-                                  colorBlendMode: BlendMode.srcOver,
-                                ),
+                      Material(
+                        shape: const CircleBorder(),
+                        elevation: 4.0,
+                        child: CircleAvatar(
+                          backgroundColor: hexToColor(widget.psw.pswColor),
+                          radius: 30,
+                          child: Icon(
+                            icons[iconNames.indexOf(widget.psw.pswIcon)].icon,
+                            size: 50,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     const SizedBox(

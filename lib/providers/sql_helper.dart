@@ -20,7 +20,8 @@ class SQLHelper {
         title TEXT,
         username TEXT,
         password TEXT,
-        userAvatar TEXT,
+        pswIcon TEXT,
+        pswColor TEXT,
         pinned BOOL,
         createdOn TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
@@ -33,7 +34,7 @@ class SQLHelper {
   }
 
   static Future createItem(String title, String? username, String? password,
-      String? userAvatar) async {
+      String? pswIcon, String? pswColor) async {
     // Init ffi loader if needed.
     sqfliteFfiInit();
 
@@ -46,7 +47,8 @@ class SQLHelper {
       'title': title,
       'username': username,
       'password': password,
-      'userAvatar': userAvatar,
+      'pswIcon': pswIcon,
+      'pswColor': pswColor,
       'pinned': 'FALSE'
     };
 
@@ -59,7 +61,7 @@ class SQLHelper {
   }
 
   static Future updateItem(int id, String title, String? username,
-      String? password, String? userAvatar) async {
+      String? password, String? pswIcon, String? pswColor) async {
     // Init ffi loader if needed.
     sqfliteFfiInit();
 
@@ -72,7 +74,8 @@ class SQLHelper {
       'title': title,
       'username': username,
       'password': password,
-      'userAvatar': userAvatar,
+      'pswIcon': pswIcon,
+      'pswColor': pswColor,
       'createdOn': DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now())
     };
 
@@ -97,7 +100,8 @@ class SQLHelper {
       'title': psw.title,
       'username': psw.username,
       'password': psw.password,
-      'userAvatar': psw.userAvatar,
+      'pswIcon': psw.pswIcon,
+      'pswColor': psw.pswColor,
       'pinned': psw.pinned ? 'FALSE' : 'TRUE',
       'createdOn': psw.createdOn
     };

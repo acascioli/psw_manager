@@ -1,6 +1,7 @@
 import 'package:psw_manager/models/menu_item.dart';
 import 'package:psw_manager/models/psw.dart';
 import 'package:get/get.dart';
+import 'package:encrypt/encrypt.dart';
 
 class AppController extends GetxController {
   bool isDesktop = true;
@@ -15,13 +16,16 @@ class AppController extends GetxController {
     pinnedPsws = [];
     _psws = data;
     for (var psw in _psws) {
+      print('psw');
+      print(psw);
       allPsws.add(
         Psw(
           psw['id'],
           psw['title'],
           psw['username'],
           psw['password'],
-          psw['userAvatar'],
+          psw['pswIcon'],
+          psw['pswColor'],
           (psw['pinned'] == 'FALSE') ? false : true,
           psw['createdOn'],
         ),
@@ -33,7 +37,8 @@ class AppController extends GetxController {
             psw['title'],
             psw['username'],
             psw['password'],
-            psw['userAvatar'],
+            psw['pswIcon'],
+            psw['pswColor'],
             true,
             psw['createdOn'],
           ),

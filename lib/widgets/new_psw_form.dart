@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
+
 import 'package:psw_manager/providers/sql_helper.dart';
 import 'package:psw_manager/models/psw.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:get/get.dart';
 import 'package:psw_manager/providers/app_controller.dart';
+import 'package:psw_manager/random_string.dart';
 
 class NewPswForm extends StatefulWidget {
   const NewPswForm({
@@ -22,7 +27,8 @@ class _PswData {
   String? title = '';
   String? username = '';
   String? password = '';
-  String? userAvatar = '';
+  String? pswIcon = '';
+  String? pswColor = '';
 }
 
 class _NewPswFormState extends State<NewPswForm> {
@@ -37,6 +43,51 @@ class _NewPswFormState extends State<NewPswForm> {
   late String _password;
   double _strength = 0;
   String _displayText = 'Please enter a password';
+
+  late Color pickedColor;
+
+  late encrypt.Encrypted encrypted;
+  String keyString = "";
+  String encryptedString = "";
+  String decryptedString = "";
+  String masterPassString = "";
+  late int pickedIcon;
+
+  List<Icon> icons = [
+    const Icon(Icons.account_circle, size: 28, color: Colors.white),
+    const Icon(Icons.add, size: 28, color: Colors.white),
+    const Icon(Icons.access_alarms, size: 28, color: Colors.white),
+    const Icon(Icons.ac_unit, size: 28, color: Colors.white),
+    const Icon(Icons.accessible, size: 28, color: Colors.white),
+    const Icon(Icons.account_balance, size: 28, color: Colors.white),
+    const Icon(Icons.add_circle_outline, size: 28, color: Colors.white),
+    const Icon(Icons.airline_seat_individual_suite,
+        size: 28, color: Colors.white),
+    const Icon(Icons.arrow_drop_down_circle, size: 28, color: Colors.white),
+    const Icon(Icons.assessment, size: 28, color: Colors.white),
+  ];
+
+  List<String> iconNames = [
+    "Icon 1",
+    "Icon 2",
+    "Icon 3",
+    "Icon 4",
+    "Icon 5",
+    "Icon 6",
+    "Icon 7",
+    "Icon 8",
+    "Icon 9",
+    "Icon 10",
+  ];
+  Color hexToColor(String code) {
+    return Color(int.parse(code.substring(1, 9), radix: 16) + 0xFF000000);
+  }
+
+  Future<void> getMasterPass() async {
+    const storage = FlutterSecureStorage();
+    String masterPass = await storage.read(key: 'master') ?? '';
+    masterPassString = masterPass;
+  }
 
   // This function is used to fetch all data from the database
   void _createPswsTable() async {
@@ -56,9 +107,52 @@ class _NewPswFormState extends State<NewPswForm> {
     });
   }
 
+  _openColorPicker() async {
+    Color _tempShadeColor = pickedColor;
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          contentPadding: const EdgeInsets.all(6.0),
+          title: const Text("Color picker"),
+          actions: [
+            ElevatedButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  pickedColor = _tempShadeColor;
+                });
+              },
+            ),
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: Navigator.of(context).pop,
+            ),
+          ],
+          content: MaterialColorPicker(
+            allowShades: true,
+            selectedColor: _tempShadeColor,
+            onColorChange: (color) => setState(() => _tempShadeColor = color),
+            onMainColorChange: (color) =>
+                setState(() => _tempShadeColor = color!),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    getMasterPass();
+    if (widget.receivedPsw.pswIcon.isNotEmpty) {
+      pickedIcon = iconNames.indexOf(widget.receivedPsw.pswIcon);
+      pickedColor = hexToColor(widget.receivedPsw.pswColor);
+    } else {
+      pickedIcon = 0;
+      pickedColor = Colors.red;
+    }
     _createPswsTable();
     _refreshPsws(); // Loading the diary when the app starts
     titleController.text = widget.receivedPsw.title;
@@ -72,7 +166,8 @@ class _NewPswFormState extends State<NewPswForm> {
       _data.title!,
       _data.username,
       _data.password,
-      _data.userAvatar,
+      _data.pswIcon,
+      _data.pswColor,
     );
     _refreshPsws();
   }
@@ -83,7 +178,8 @@ class _NewPswFormState extends State<NewPswForm> {
       _data.title!,
       _data.username,
       _data.password,
-      _data.userAvatar,
+      _data.pswIcon,
+      _data.pswColor,
     );
     _refreshPsws();
   }
@@ -133,6 +229,7 @@ class _NewPswFormState extends State<NewPswForm> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: widget.receivedPsw.title.isEmpty
           ? const Text('Add new password')
           : const Text('Edit password'),
@@ -227,42 +324,119 @@ class _NewPswFormState extends State<NewPswForm> {
               _displayText,
               // style: const TextStyle(fontSize: 18),
             ),
-            const SizedBox(
-              height: 20,
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 10),
               child: Center(
                 child: ElevatedButton(
-                  onPressed: () async {
-                    FilePickerResult? result =
-                        await FilePicker.platform.pickFiles();
+                  onPressed: () {
                     setState(() {
-                      if (result == null) {
-                        print("No file selected");
-                      } else {
-                        _data.userAvatar = result.files.single.path;
-                        print(result.files.single.path);
-                      }
+                      String pass = generatePassword();
+                      pswController.text = pass;
+                      _checkPassword(pass);
                     });
                   },
-                  child: const Text("File Picker"),
+                  child: const Text("Generate"),
                 ),
               ),
             ),
-            widget.receivedPsw.userAvatar.isEmpty
-                ? Text(
-                    'File chosen: ' + _data.userAvatar!,
-                    style: const TextStyle(
-                      fontSize: 12,
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.only(left: 0.0, right: 8.0, top: 8.0),
+                    child: Text(
+                      "Pick an Icon",
+                      style: TextStyle(
+                        fontFamily: 'Title',
+                        fontSize: 20,
+                        // color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
+                    child: Material(
+                      shape: const CircleBorder(),
+                      elevation: 4.0,
+                      child: CircleAvatar(
+                          backgroundColor: pickedColor,
+                          radius: 25,
+                          child: icons[pickedIcon]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0.0, 15, 0, 10),
+              child: SizedBox(
+                height: 120,
+                width: 300,
+                child: GridView.count(
+                  shrinkWrap: true,
+                  scrollDirection: Axis.vertical,
+                  crossAxisCount: 5,
+                  crossAxisSpacing: 2,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 1.3,
+                  children: List.generate(
+                    icons.length,
+                    (index) {
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            pickedIcon = index;
+                          });
+                        },
+                        child: Material(
+                            elevation: 4.0,
+                            color: pickedColor,
+                            shape: const CircleBorder(),
+                            child: icons[index]),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      "Pick a Color",
+                      style: TextStyle(
+                        fontFamily: 'Title',
+                        fontSize: 20,
+                        // color: primaryColor,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      _openColorPicker();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 8.0, right: 8.0, top: 8.0),
+                      child: Material(
+                          shape: const CircleBorder(),
+                          elevation: 4.0,
+                          child: CircleAvatar(
+                            backgroundColor: pickedColor,
+                            radius: 25,
+                          )),
                     ),
                   )
-                : Text(
-                    'File chosen: ' + widget.receivedPsw.userAvatar,
-                    style: const TextStyle(
-                      fontSize: 12,
-                    ),
-                  )
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -272,6 +446,8 @@ class _NewPswFormState extends State<NewPswForm> {
             // Validate returns true if the form is valid, or false otherwise.
             if (_formKey.currentState!.validate()) {
               _formKey.currentState?.save();
+              _data.pswIcon = iconNames[pickedIcon];
+              _data.pswColor = "#" + pickedColor.value.toRadixString(16);
               print(_data.username);
               if (widget.receivedPsw.title.isEmpty) {
                 await _addItem(_data);
@@ -288,7 +464,6 @@ class _NewPswFormState extends State<NewPswForm> {
                 titleController.clear();
                 userController.clear();
                 pswController.clear();
-                _data.userAvatar = '';
                 _checkPassword(pswController.text);
               });
             }

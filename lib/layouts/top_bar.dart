@@ -68,7 +68,7 @@ class TopBar extends StatelessWidget {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) => NewPswForm(
-                          receivedPsw: Psw(0, '', '', '', '', false, ''),
+                          receivedPsw: Psw(0, '', '', '', '', '', false, ''),
                         ),
                       );
                     },
