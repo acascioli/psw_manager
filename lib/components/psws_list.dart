@@ -39,31 +39,6 @@ class _PswsListState extends State<PswsList> {
     final data = await SQLHelper.getItems();
     setState(() {
       controller.refreshPswsController(data);
-      // _psws = data;
-      // for (var psw in _psws) {
-      //   allPsws.add(
-      //     Psw(
-      //       psw['title'],
-      //       psw['username'],
-      //       psw['password'],
-      //       psw['userAvatar'],
-      //       (psw['pinned'] == 'FALSE') ? false : true,
-      //       psw['createdOn'],
-      //     ),
-      //   );
-      //   if (psw['pinned'] != 'FALSE') {
-      //     pinnedPsws.add(
-      //       Psw(
-      //         psw['title'],
-      //         psw['username'],
-      //         psw['password'],
-      //         psw['userAvatar'],
-      //         true,
-      //         psw['createdOn'],
-      //       ),
-      //     );
-      //   }
-      // }
       _isLoading = false;
     });
   }
@@ -123,7 +98,7 @@ class _PswsListState extends State<PswsList> {
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: _isSm ? 1 : (_isLg ? 2 : 3),
-                                childAspectRatio: 1.63,
+                                childAspectRatio: 1.45,
                               ),
                               itemBuilder: (context, index) => PswCard(
                                 psw: pinnedPsws[index],
@@ -156,7 +131,7 @@ class _PswsListState extends State<PswsList> {
                         itemCount: allPsws.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: _isSm ? 1 : (_isLg ? 2 : 3),
-                          childAspectRatio: 1.63,
+                          childAspectRatio: 1.45,
                         ),
                         itemBuilder: (context, index) => PswCard(
                           psw: allPsws[index],

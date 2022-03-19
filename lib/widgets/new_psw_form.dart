@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:psw_manager/providers/sql_helper.dart';
+import 'package:psw_manager/models/psw.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:get/get.dart';
 import 'package:psw_manager/providers/app_controller.dart';
 
 class NewPswForm extends StatefulWidget {
-  const NewPswForm({Key? key}) : super(key: key);
+  const NewPswForm({
+    Key? key,
+    required this.receivedPsw,
+  }) : super(key: key);
+
+  final Psw receivedPsw;
 
   @override
   State<NewPswForm> createState() => _NewPswFormState();
@@ -24,6 +30,7 @@ class _NewPswFormState extends State<NewPswForm> {
   List<Map<String, dynamic>> _psws = [];
 
   bool _isLoading = true;
+  bool _isObscure = true;
   final controller = Get.put(AppController());
 
   // This function is used to fetch all data from the database
@@ -49,6 +56,9 @@ class _NewPswFormState extends State<NewPswForm> {
     super.initState();
     _createPswsTable();
     _refreshPsws(); // Loading the diary when the app starts
+    titleController.text = widget.receivedPsw.title;
+    userController.text = widget.receivedPsw.username;
+    pswController.text = widget.receivedPsw.password;
   }
 
   Future<void> _addItem(_PswData _data) async {
@@ -69,7 +79,9 @@ class _NewPswFormState extends State<NewPswForm> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Add new password'),
+      title: widget.receivedPsw.title.isEmpty
+          ? const Text('Add new password')
+          : const Text('Edit password'),
       content: Form(
         key: _formKey,
         child: Column(
@@ -81,7 +93,6 @@ class _NewPswFormState extends State<NewPswForm> {
               autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Title',
-                // hintText: 'you@example.com',
               ),
               // The validator receives the text that the user has entered.
               validator: (value) {
@@ -116,10 +127,19 @@ class _NewPswFormState extends State<NewPswForm> {
             TextFormField(
               controller: pswController,
               autofocus: true,
-              obscureText: true,
-              decoration: const InputDecoration(
+              obscureText: _isObscure,
+              decoration: InputDecoration(
                 labelText: 'Password',
-                // hintText: 'you@example.com',
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _isObscure = !_isObscure;
+                    });
+                  },
+                  icon: Icon(
+                      _isObscure ? Icons.visibility : Icons.visibility_off),
+                  // hintText: 'you@example.com',
+                ),
               ),
               // The validator receives the text that the user has entered.
               validator: (value) {
@@ -152,12 +172,19 @@ class _NewPswFormState extends State<NewPswForm> {
                 ),
               ),
             ),
-            Text(
-              'File chosen: ' + _data.userAvatar!,
-              style: const TextStyle(
-                fontSize: 12,
-              ),
-            )
+            widget.receivedPsw.userAvatar.isEmpty
+                ? Text(
+                    'File chosen: ' + _data.userAvatar!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                    ),
+                  )
+                : Text(
+                    'File chosen: ' + widget.receivedPsw.userAvatar,
+                    style: const TextStyle(
+                      fontSize: 12,
+                    ),
+                  )
           ],
         ),
       ),

@@ -7,6 +7,7 @@ import '../constants.dart';
 import '../responsive.dart';
 import 'package:get/get.dart';
 import 'package:psw_manager/providers/app_controller.dart';
+import 'package:psw_manager/widgets/new_psw_form.dart';
 
 class PswCard extends StatefulWidget {
   const PswCard({
@@ -66,6 +67,8 @@ class _PswCardState extends State<PswCard> {
           return 5;
         case 2:
           return 10;
+        case 3:
+          return 12;
       }
     } else if (Responsive.isTablet(context)) {
       switch (selector) {
@@ -75,14 +78,18 @@ class _PswCardState extends State<PswCard> {
           return 10;
         case 2:
           return 13;
+        case 3:
+          return 15;
       }
     } else {
       switch (selector) {
         case 0:
-          return 20;
+          return 18;
         case 1:
-          return 15;
+          return 14;
         case 2:
+          return 18;
+        case 3:
           return 18;
       }
     }
@@ -108,8 +115,7 @@ class _PswCardState extends State<PswCard> {
           ),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 900),
-            // transform: entered ? (Matrix4.skew(0, 0.1)) : null,
-            // transform: entered ? (Matrix4.identity()..scale(1.025)) : null,
+            transform: entered ? (Matrix4.identity()..scale(1.025)) : null,
             margin: const EdgeInsets.only(
               top: 12,
               right: 14,
@@ -132,204 +138,171 @@ class _PswCardState extends State<PswCard> {
                 ),
               ],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        if (Responsive.isDesktop(context))
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(100),
-                            child: SizedBox(
-                              width: 60,
-                              height: 60,
-                              child: (widget.psw.userAvatar == '')
-                                  ? Image.asset(
-                                      'assets/images/psw.png',
-                                      fit: BoxFit.cover,
-                                      color: darkColor.withOpacity(.3),
-                                      colorBlendMode: BlendMode.srcOver,
-                                    )
-                                  : Image.file(
-                                      File(
-                                        widget.psw.userAvatar,
-                                      ),
-                                      fit: BoxFit.cover,
-                                      color: darkColor.withOpacity(.3),
-                                      colorBlendMode: BlendMode.srcOver,
-                                    ),
-                            ),
-                          ),
-                        const SizedBox(
-                          width: 8,
+                    if (Responsive.isDesktop(context))
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(100),
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: (widget.psw.userAvatar == '')
+                              ? Image.asset(
+                                  'assets/images/psw.png',
+                                  fit: BoxFit.cover,
+                                  color: darkColor.withOpacity(.3),
+                                  colorBlendMode: BlendMode.srcOver,
+                                )
+                              : Image.file(
+                                  File(
+                                    widget.psw.userAvatar,
+                                  ),
+                                  fit: BoxFit.cover,
+                                  color: darkColor.withOpacity(.3),
+                                  colorBlendMode: BlendMode.srcOver,
+                                ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.psw.title,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                color: darkColor,
-                                fontSize: getSize(context, 0),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 2,
-                            ),
-                            Text(
-                              widget.psw.createdOn,
-                              style: TextStyle(
-                                color: textColor,
-                                fontSize: getSize(context, 1),
-                              ),
-                            ),
-                          ],
+                      ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.psw.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: darkColor,
+                            fontSize: getSize(context, 0),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                        Text(
+                          widget.psw.createdOn,
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: getSize(context, 1),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(
-                      height: 12,
-                    ),
-                    Text(
-                      widget.psw.username,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: darkColor,
-                        fontSize: getSize(context, 2),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 4,
-                    ),
-                    Expanded(
-                      child: Text(
-                        widget.psw.password,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.start,
-                        style: TextStyle(
-                          color: textColor,
-                          fontSize: getSize(context, 2),
-                        ),
-                        softWrap: true,
-                        maxLines: 5,
-                      ),
-                    ),
                   ],
                 ),
-                if (entered) ...[
-                  const Spacer(),
-                  Column(
+                const SizedBox(
+                  height: 12,
+                ),
+                Text(
+                  widget.psw.username,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: darkColor,
+                    fontSize: getSize(context, 2),
+                  ),
+                ),
+                const SizedBox(
+                  height: 4,
+                ),
+                Expanded(
+                  child: Text(
+                    widget.psw.password,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: getSize(context, 2),
+                    ),
+                    softWrap: true,
+                    maxLines: 5,
+                  ),
+                ),
+                const Divider(),
+                Expanded(
+                  child: Row(
                     children: [
-                      PopupMenuButton(
-                          iconSize: getSize(context, 0),
-                          onSelected: (selectedValue) {
-                            setState(() {
-                              selectedItem = selectedValue.toString();
-                            });
-                          },
-                          itemBuilder: (BuildContext ctx) => [
-                                PopupMenuItem(
-                                    child: Text(
-                                      'Copy password',
-                                      style: TextStyle(
-                                        fontSize: getSize(context, 2),
-                                      ),
-                                    ),
-                                    value: '1'),
-                                PopupMenuItem(
-                                    child: Text(
-                                      'Show password',
-                                      style: TextStyle(
-                                        fontSize: getSize(context, 2),
-                                      ),
-                                    ),
-                                    value: '2'),
-                                PopupMenuItem(
-                                    child: Text(
-                                      'Edit',
-                                      style: TextStyle(
-                                        fontSize: getSize(context, 2),
-                                      ),
-                                    ),
-                                    value: '3'),
-                                PopupMenuItem(
-                                    child: Text(
-                                      'Delete',
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontSize: getSize(context, 2),
-                                      ),
-                                    ),
-                                    value: '4',
-                                    onTap: () {
-                                      setState(() {
-                                        _deleteItem(widget.psw.title);
-                                      });
-                                    }),
-                              ]),
-                      // IconButton(
-                      //   onPressed: () {
-                      //     print('Ping');
-                      //   },
-                      //   icon: const Icon(
-                      //     Icons.more_vert,
-                      //     color: darkColor,
-                      //   ),
-                      // ),
                       IconButton(
+                        tooltip: 'Pin password',
                         onPressed: () {
                           _togglePinned(widget.psw);
                         },
+                        padding: const EdgeInsets.all(4),
                         icon: Icon(
                           widget.psw.pinned
                               ? Icons.push_pin
                               : Icons.push_pin_outlined,
                           color: darkColor,
-                          size: getSize(context, 0),
+                          size: getSize(context, 3),
                         ),
                       ),
                       IconButton(
+                        tooltip: 'Show password',
                         onPressed: () {
                           // _togglePinned(widget.psw);
                           print('Pong');
                         },
+                        padding: const EdgeInsets.all(4),
                         icon: Icon(
                           widget.psw.pinned
                               ? Icons.lock_outline_rounded
                               : Icons.lock_open_rounded,
-                          color: widget.psw.pinned ? darkColor : Colors.amber,
-                          size: getSize(context, 0),
+                          color: widget.psw.pinned
+                              ? Colors.green
+                              : Colors.redAccent,
+                          size: getSize(context, 3),
                         ),
                       ),
                       IconButton(
+                        tooltip: 'Copy password to clipboard',
                         onPressed: () {
                           _copyToClipboard(widget.psw.password);
                         },
+                        padding: const EdgeInsets.all(4),
                         icon: Icon(
                           Icons.copy,
                           color: Theme.of(context).primaryColor,
-                          size: getSize(context, 0),
+                          size: getSize(context, 3),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Edit',
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) => NewPswForm(
+                              receivedPsw: widget.psw,
+                            ),
+                          );
+                        },
+                        padding: const EdgeInsets.all(4),
+                        icon: Icon(
+                          Icons.edit,
+                          color: Colors.amber,
+                          size: getSize(context, 3),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Delete',
+                        onPressed: () {
+                          setState(() {
+                            _deleteItem(widget.psw.title);
+                          });
+                        },
+                        padding: const EdgeInsets.all(4),
+                        icon: Icon(
+                          Icons.delete_forever,
+                          color: Colors.red,
+                          size: getSize(context, 3),
                         ),
                       ),
                     ],
-                  )
-                ] else ...[
-                  const Spacer(),
-                  if (widget.psw.pinned)
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.push_pin,
-                        color: darkColor,
-                        size: getSize(context, 0),
-                      ),
-                    ),
-                ],
+                  ),
+                ),
               ],
             ),
           ),

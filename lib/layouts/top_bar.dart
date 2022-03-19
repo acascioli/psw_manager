@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:psw_manager/widgets/search_bar.dart';
 import 'package:psw_manager/widgets/new_psw_form.dart';
+import 'package:psw_manager/models/psw.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../constants.dart';
@@ -66,7 +67,9 @@ class TopBar extends StatelessWidget {
                     onPressed: () {
                       showDialog(
                         context: context,
-                        builder: (BuildContext context) => const NewPswForm(),
+                        builder: (BuildContext context) => NewPswForm(
+                          receivedPsw: Psw('', '', '', '', false, ''),
+                        ),
                       );
                     },
                     style: TextButton.styleFrom(
