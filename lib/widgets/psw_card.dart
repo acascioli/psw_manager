@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:psw_manager/models/psw.dart';
 import 'package:psw_manager/providers/sql_helper.dart';
@@ -46,6 +47,14 @@ class _PswCardState extends State<PswCard> {
       controller.refreshPswsController(data);
       _psws = data;
     });
+  }
+
+  // This function is triggered when the copy icon is pressed
+  Future<void> _copyToClipboard(psw_text) async {
+    await Clipboard.setData(ClipboardData(text: psw_text));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Copied to clipboard'),
+    ));
   }
 
   double? getSize(BuildContext context, int selector) {
@@ -222,7 +231,6 @@ class _PswCardState extends State<PswCard> {
                             setState(() {
                               selectedItem = selectedValue.toString();
                             });
-                            print(selectedItem);
                           },
                           itemBuilder: (BuildContext ctx) => [
                                 PopupMenuItem(
@@ -276,7 +284,6 @@ class _PswCardState extends State<PswCard> {
                       IconButton(
                         onPressed: () {
                           _togglePinned(widget.psw);
-                          print('Pong');
                         },
                         icon: Icon(
                           widget.psw.pinned
@@ -293,9 +300,19 @@ class _PswCardState extends State<PswCard> {
                         },
                         icon: Icon(
                           widget.psw.pinned
-                              ? Icons.lock
-                              : Icons.push_pin_outlined,
-                          color: darkColor,
+                              ? Icons.lock_outline_rounded
+                              : Icons.lock_open_rounded,
+                          color: widget.psw.pinned ? darkColor : Colors.amber,
+                          size: getSize(context, 0),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          _copyToClipboard(widget.psw.password);
+                        },
+                        icon: Icon(
+                          Icons.copy,
+                          color: Theme.of(context).primaryColor,
                           size: getSize(context, 0),
                         ),
                       ),
