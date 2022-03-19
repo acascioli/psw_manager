@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path_provider/path_provider.dart';
@@ -72,7 +73,7 @@ class SQLHelper {
       'username': username,
       'password': password,
       'userAvatar': userAvatar,
-      'createdOn': DateTime.now().toString()
+      'createdOn': DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now())
     };
 
     await db.update('Psws', data, where: "id = ?", whereArgs: [id]);

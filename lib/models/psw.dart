@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 class Psw {
+  final int id;
   final String title;
   final String username;
   final String password;
@@ -9,6 +10,7 @@ class Psw {
   final String createdOn;
 
   Psw(
+    this.id,
     this.title,
     this.username,
     this.password,

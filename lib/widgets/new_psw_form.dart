@@ -64,10 +64,22 @@ class _NewPswFormState extends State<NewPswForm> {
     titleController.text = widget.receivedPsw.title;
     userController.text = widget.receivedPsw.username;
     pswController.text = widget.receivedPsw.password;
+    _checkPassword(pswController.text);
   }
 
   Future<void> _addItem(_PswData _data) async {
     await SQLHelper.createItem(
+      _data.title!,
+      _data.username,
+      _data.password,
+      _data.userAvatar,
+    );
+    _refreshPsws();
+  }
+
+  Future<void> _updateItem(_PswData _data) async {
+    await SQLHelper.updateItem(
+      widget.receivedPsw.id,
       _data.title!,
       _data.username,
       _data.password,
@@ -261,7 +273,12 @@ class _NewPswFormState extends State<NewPswForm> {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState?.save();
               print(_data.username);
-              await _addItem(_data);
+              if (widget.receivedPsw.title.isEmpty) {
+                await _addItem(_data);
+              } else {
+                await _updateItem(_data);
+              }
+
               // If the form is valid, display a snackbar. In the real world,
               // you'd often call a server or save the information in a database.
               ScaffoldMessenger.of(context).showSnackBar(
@@ -272,6 +289,7 @@ class _NewPswFormState extends State<NewPswForm> {
                 userController.clear();
                 pswController.clear();
                 _data.userAvatar = '';
+                _checkPassword(pswController.text);
               });
             }
           },

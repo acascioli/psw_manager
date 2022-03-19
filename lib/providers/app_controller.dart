@@ -17,6 +17,7 @@ class AppController extends GetxController {
     for (var psw in _psws) {
       allPsws.add(
         Psw(
+          psw['id'],
           psw['title'],
           psw['username'],
           psw['password'],
@@ -28,6 +29,7 @@ class AppController extends GetxController {
       if (psw['pinned'] != 'FALSE') {
         pinnedPsws.add(
           Psw(
+            psw['id'],
             psw['title'],
             psw['username'],
             psw['password'],
