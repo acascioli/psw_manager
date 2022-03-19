@@ -1,7 +1,6 @@
 import 'package:psw_manager/models/menu_item.dart';
 import 'package:psw_manager/models/psw.dart';
 import 'package:get/get.dart';
-import 'package:encrypt/encrypt.dart';
 
 class AppController extends GetxController {
   bool isDesktop = true;

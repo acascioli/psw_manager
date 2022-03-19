@@ -8,6 +8,8 @@ import '../responsive.dart';
 import 'package:get/get.dart';
 import 'package:psw_manager/providers/app_controller.dart';
 import 'package:psw_manager/widgets/new_psw_form.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class PswCard extends StatefulWidget {
   const PswCard({
@@ -48,6 +50,7 @@ class _PswCardState extends State<PswCard> {
     "Icon 9",
     "Icon 10",
   ];
+
   Color hexToColor(String code) {
     return Color(int.parse(code.substring(1, 9), radix: 16) + 0xFF000000);
   }
@@ -124,6 +127,93 @@ class _PswCardState extends State<PswCard> {
       }
     }
     return null;
+  }
+
+  TextEditingController masterPassController = TextEditingController();
+  bool decrypt = false;
+  String decrypted = "*" * 15;
+  String masterPassString = "";
+
+  Future<String> getMasterPass() async {
+    final storage = FlutterSecureStorage();
+    String masterPass = await storage.read(key: 'master') ?? '';
+    return masterPass;
+  }
+
+  Future buildShowDialogBox(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Enter Master Password"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Text(
+                "To decrypt the password enter your master password:",
+                style: TextStyle(fontFamily: 'Subtitle'),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  obscureText: true,
+                  maxLength: 32,
+                  decoration: InputDecoration(
+                      hintText: "Master Pass",
+                      hintStyle: const TextStyle(fontFamily: "Subtitle"),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16))),
+                  controller: masterPassController,
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                masterPassString = masterPassController.text;
+                decryptPass(widget.psw.password, masterPassString);
+                masterPassController.clear();
+                if (!decrypt) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Wrong Master Password')),
+                  );
+                }
+              },
+              child: const Text("Done"),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  decryptPass(String encryptedPass, String masterPass) {
+    String keyString = masterPass;
+    if (keyString.length < 32) {
+      int count = 32 - keyString.length;
+      for (var i = 0; i < count; i++) {
+        keyString += ".";
+      }
+    }
+
+    final key = encrypt.Key.fromUtf8(keyString);
+    final iv = encrypt.IV.fromLength(16);
+
+    try {
+      final encrypter = encrypt.Encrypter(encrypt.AES(key));
+      print('encrypter.decrypt64(encryptedPass, iv: iv)');
+      final d = encrypter.decrypt64(encryptedPass, iv: iv);
+      setState(() {
+        decrypted = d;
+        decrypt = true;
+      });
+    } catch (exception) {
+      setState(() {
+        decrypted = "Wrong Master Password";
+      });
+    }
   }
 
   @override
@@ -231,7 +321,7 @@ class _PswCardState extends State<PswCard> {
                 ),
                 Expanded(
                   child: Text(
-                    widget.psw.password,
+                    decrypted,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.start,
                     style: TextStyle(
@@ -262,25 +352,33 @@ class _PswCardState extends State<PswCard> {
                       ),
                       IconButton(
                         tooltip: 'Show password',
-                        onPressed: () {
-                          // _togglePinned(widget.psw);
-                          print('Pong');
+                        onPressed: () async {
+                          if (!decrypt) {
+                            buildShowDialogBox(context);
+                          } else if (!decrypt) {
+                            decryptPass(widget.psw.password, masterPassString);
+                          } else if (decrypt) {
+                            setState(() {
+                              decrypted = "*" * 15;
+                              decrypt = !decrypt;
+                            });
+                          }
                         },
                         padding: const EdgeInsets.all(4),
                         icon: Icon(
-                          widget.psw.pinned
+                          !decrypt
                               ? Icons.lock_outline_rounded
                               : Icons.lock_open_rounded,
-                          color: widget.psw.pinned
-                              ? Colors.green
-                              : Colors.redAccent,
+                          color: !decrypt ? Colors.green : Colors.redAccent,
                           size: getSize(context, 3),
                         ),
                       ),
                       IconButton(
                         tooltip: 'Copy password to clipboard',
                         onPressed: () {
-                          _copyToClipboard(widget.psw.password);
+                          decrypt
+                              ? _copyToClipboard(decrypted)
+                              : _copyToClipboard(widget.psw.password);
                         },
                         padding: const EdgeInsets.all(4),
                         icon: Icon(

@@ -142,10 +142,72 @@ class _NewPswFormState extends State<NewPswForm> {
     );
   }
 
+  TextEditingController masterPassController = TextEditingController();
+
+  Future buildShowDialogBox(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Enter Master Password"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Text(
+                "To enctypy the password enter your master password:",
+                style: TextStyle(fontFamily: 'Subtitle'),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  obscureText: true,
+                  maxLength: 32,
+                  decoration: InputDecoration(
+                      hintText: "Master Pass",
+                      hintStyle: const TextStyle(fontFamily: "Subtitle"),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16))),
+                  controller: masterPassController,
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                masterPassString = masterPassController.text;
+                masterPassController.clear();
+              },
+              child: const Text("DONE"),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  encryptPass(String text) {
+    keyString = masterPassString;
+    if (keyString.length < 32) {
+      int count = 32 - keyString.length;
+      for (var i = 0; i < count; i++) {
+        keyString += ".";
+      }
+    }
+    final key = encrypt.Key.fromUtf8(keyString);
+    final plainText = text;
+    final iv = encrypt.IV.fromLength(16);
+
+    final encrypter = encrypt.Encrypter(encrypt.AES(key));
+    final e = encrypter.encrypt(plainText, iv: iv);
+    encryptedString = e.base64.toString();
+  }
+
   @override
   void initState() {
     super.initState();
-    getMasterPass();
+    // getMasterPass();
     if (widget.receivedPsw.pswIcon.isNotEmpty) {
       pickedIcon = iconNames.indexOf(widget.receivedPsw.pswIcon);
       pickedColor = hexToColor(widget.receivedPsw.pswColor);
@@ -443,12 +505,14 @@ class _NewPswFormState extends State<NewPswForm> {
       actions: <Widget>[
         ElevatedButton(
           onPressed: () async {
+            await buildShowDialogBox(context);
             // Validate returns true if the form is valid, or false otherwise.
             if (_formKey.currentState!.validate()) {
               _formKey.currentState?.save();
+              encryptPass(pswController.text);
+              _data.password = encryptedString;
               _data.pswIcon = iconNames[pickedIcon];
               _data.pswColor = "#" + pickedColor.value.toRadixString(16);
-              print(_data.username);
               if (widget.receivedPsw.title.isEmpty) {
                 await _addItem(_data);
               } else {
