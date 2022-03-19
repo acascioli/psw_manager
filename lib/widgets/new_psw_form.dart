@@ -32,6 +32,11 @@ class _NewPswFormState extends State<NewPswForm> {
   bool _isLoading = true;
   bool _isObscure = true;
   final controller = Get.put(AppController());
+  RegExp numReg = RegExp(r".*[0-9].*");
+  RegExp letterReg = RegExp(r".*[A-Za-z].*");
+  late String _password;
+  double _strength = 0;
+  String _displayText = 'Please enter a password';
 
   // This function is used to fetch all data from the database
   void _createPswsTable() async {
@@ -69,6 +74,43 @@ class _NewPswFormState extends State<NewPswForm> {
       _data.userAvatar,
     );
     _refreshPsws();
+  }
+
+  void _checkPassword(String value) {
+    _password = value.trim();
+
+    if (_password.isEmpty) {
+      setState(() {
+        _strength = 0;
+        _displayText = 'Please enter you password';
+      });
+    } else if (_password.length < 6) {
+      setState(() {
+        _strength = 1 / 4;
+        _displayText = 'Your password is too short';
+      });
+    } else if (_password.length < 8) {
+      setState(() {
+        _strength = 2 / 4;
+        _displayText = 'Your password is acceptable\n,but not strong';
+      });
+    } else {
+      if (!letterReg.hasMatch(_password) || !numReg.hasMatch(_password)) {
+        setState(() {
+          // Password length >= 8
+          // But doesn't contain both letter and digit characters
+          _strength = 3 / 4;
+          _displayText = 'Your password is strong';
+        });
+      } else {
+        // Password length >= 8
+        // Password contains both letter and digit characters
+        setState(() {
+          _strength = 1;
+          _displayText = 'Your password is great';
+        });
+      }
+    }
   }
 
   final _formKey = GlobalKey<FormState>();
@@ -141,6 +183,7 @@ class _NewPswFormState extends State<NewPswForm> {
                   // hintText: 'you@example.com',
                 ),
               ),
+              onChanged: (value) => _checkPassword(value),
               // The validator receives the text that the user has entered.
               validator: (value) {
                 if (value != null && value.length > 8) {
@@ -151,6 +194,29 @@ class _NewPswFormState extends State<NewPswForm> {
               onSaved: (String? value) {
                 _data.password = value;
               },
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            LinearProgressIndicator(
+              value: _strength,
+              backgroundColor: Colors.grey[300],
+              color: _strength <= 1 / 4
+                  ? Colors.red
+                  : _strength == 2 / 4
+                      ? Colors.yellow
+                      : _strength == 3 / 4
+                          ? Colors.blue
+                          : Colors.green,
+              minHeight: 15,
+            ),
+            // The message about the strength of the entered password
+            Text(
+              _displayText,
+              // style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(
+              height: 20,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 10),
