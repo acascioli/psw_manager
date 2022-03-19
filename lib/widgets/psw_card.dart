@@ -289,9 +289,33 @@ class _PswCardState extends State<PswCard> {
                       IconButton(
                         tooltip: 'Delete',
                         onPressed: () {
-                          setState(() {
-                            _deleteItem(widget.psw.title);
-                          });
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) => AlertDialog(
+                              title: const Text('Please Confirm'),
+                              content: const Text(
+                                  'Are you sure you want to delete the password?'),
+                              actions: [
+                                // The "Yes" button
+                                TextButton(
+                                    onPressed: () {
+                                      // Remove the box
+                                      setState(() {
+                                        _deleteItem(widget.psw.title);
+                                      });
+                                      // Close the dialog
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Yes')),
+                                TextButton(
+                                    onPressed: () {
+                                      // Close the dialog
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('No'))
+                              ],
+                            ),
+                          );
                         },
                         padding: const EdgeInsets.all(4),
                         icon: Icon(
